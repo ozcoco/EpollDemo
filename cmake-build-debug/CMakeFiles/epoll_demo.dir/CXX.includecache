@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/main.cpp
+iostream
+-
+sys/types.h
+-
+unistd.h
+-
+sys/socket.h
+-
+arpa/inet.h
+-
+sys/stat.h
+-
+sys/un.h
+-
+error.h
+-
+sys/epoll.h
+-
+cstring
+-
+algorithm
+-
+functional
+-
+

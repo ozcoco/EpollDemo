@@ -1,0 +1,3 @@
+/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/cmake-build-debug/CMakeFiles/epoll_demo.dir
+/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/cmake-build-debug/CMakeFiles/edit_cache.dir
