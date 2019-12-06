@@ -11,7 +11,12 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a37fe11b-5f6f-49f5-b067-e52cd1cf7891" name="Default Changelist" comment="" />
+    <list default="true" id="a37fe11b-5f6f-49f5-b067-e52cd1cf7891" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/epoll_demo" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/epoll_demo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,7 +26,11 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1UZN7s15Daf5phFi1mZ6ordfNtI" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -29,6 +38,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -63,7 +73,7 @@
       <option name="presentableId" value="Default" />
       <updated>1575559992499</updated>
       <workItem from="1575559994063" duration="1244000" />
-      <workItem from="1575642656003" duration="5049000" />
+      <workItem from="1575642656003" duration="7768000" />
     </task>
     <servers />
   </component>
@@ -75,5 +85,21 @@
       <screen x="0" y="28" width="3840" height="2132" />
     </state>
     <state x="1876" y="897" width="630" height="572" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.28.3840.2132@0.28.3840.2132" timestamp="1575642731422" />
+    <state width="1701" height="566" key="GridCell.Tab.0.bottom" timestamp="1575653331811">
+      <screen x="0" y="28" width="3840" height="2132" />
+    </state>
+    <state width="1701" height="566" key="GridCell.Tab.0.bottom/0.28.3840.2132@0.28.3840.2132" timestamp="1575653331811" />
+    <state width="1701" height="566" key="GridCell.Tab.0.center" timestamp="1575653331811">
+      <screen x="0" y="28" width="3840" height="2132" />
+    </state>
+    <state width="1701" height="566" key="GridCell.Tab.0.center/0.28.3840.2132@0.28.3840.2132" timestamp="1575653331811" />
+    <state width="1701" height="566" key="GridCell.Tab.0.left" timestamp="1575653331810">
+      <screen x="0" y="28" width="3840" height="2132" />
+    </state>
+    <state width="1701" height="566" key="GridCell.Tab.0.left/0.28.3840.2132@0.28.3840.2132" timestamp="1575653331810" />
+    <state width="1701" height="566" key="GridCell.Tab.0.right" timestamp="1575653331811">
+      <screen x="0" y="28" width="3840" height="2132" />
+    </state>
+    <state width="1701" height="566" key="GridCell.Tab.0.right/0.28.3840.2132@0.28.3840.2132" timestamp="1575653331811" />
   </component>
 </project>

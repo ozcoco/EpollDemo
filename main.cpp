@@ -3,12 +3,14 @@
 
 static void test();
 
+static void test2();
+
 
 int main()
 {
 
-    test();
-
+//    test();
+    test2();
 
     return 0;
 }
@@ -201,6 +203,37 @@ void add_epoll_event(int epoll_fd, struct epoll_event &ev)
 }
 
 
+static void do_use_fd(struct epoll_event &ev);
+
+union event_callback
+{
+    void (*send)(int epoll_fd, int fd, void *arg);
+
+    void (*recv)(int epoll_fd, int fd, void *arg);
+
+    void (*err)(int epoll_fd, int fd, void *arg);
+};
+
+struct event_handle
+{
+    int epoll_fd;
+
+    int fd;
+
+    int events;
+
+    void *arg;
+
+    union event_callback callback;
+};
+
+
+static void send_callback(int epoll_fd, int fd, void *arg);
+
+static void recv_callback(int epoll_fd, int fd, void *arg);
+
+static struct event_handle evHandle{};
+
 static void test2()
 {
     int epoll_fd;
@@ -234,7 +267,6 @@ static void test2()
 
     init_epoll(&epoll_fd);
 
-
     {//add sock event
         struct epoll_event sock_ev{};
 
@@ -258,7 +290,7 @@ static void test2()
         exit(errno);
     }
 
-    if (listen(sock_fd, 200) != 0)
+    if (listen(sock_fd, 10) != 0)
     {
         perror("listen socket failure !");
 
@@ -266,7 +298,107 @@ static void test2()
     }
 
 
+    int nfds;
 
+    for (;;)
+    {
+        nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+        if (nfds == -1)
+        {
+            perror("epoll_wait");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int n = 0; n < nfds; ++n)
+        {
+            if (events[n].data.fd == sock_fd)
+            {
+                int conn_sock = accept(sock_fd, (struct sockaddr *) &acceptAddr, &c_addr_len);
+
+                if (conn_sock == -1)
+                {
+                    perror("accept");
+                    exit(EXIT_FAILURE);
+                }
+
+                set_nonblock(conn_sock);
+
+                struct epoll_event ev{};
+
+                ev.events = EPOLLIN | EPOLLET;
+
+                ev.data.fd = conn_sock;
+
+
+                evHandle.epoll_fd = epoll_fd;
+
+                evHandle.fd = conn_sock;
+
+                evHandle.events = ev.events;
+
+                evHandle.callback.send = &send_callback;
+
+                evHandle.callback.recv = &recv_callback;
+
+                ev.data.ptr = &evHandle;
+
+                add_epoll_event(epoll_fd, ev);
+
+            } else
+            {
+                do_use_fd(events[n]);
+            }
+        }
+    }
+
+    close(sock_fd);
+
+    for (auto &ev:events)
+    {
+        close(ev.data.fd);
+    }
+}
+
+
+static void do_use_fd(struct epoll_event &ev)
+{
+    struct event_handle *handle = reinterpret_cast<struct event_handle *>(ev.data.ptr);
+
+    union event_callback &callback = handle->callback;
+
+    if (ev.events == EPOLLIN)
+    {
+        callback.recv(handle->epoll_fd, handle->fd, handle->arg);
+
+    } else if (ev.events == EPOLLOUT)
+    {
+        callback.send(handle->epoll_fd, handle->fd, handle->arg);
+
+    } else
+    {
+        //todo
+    }
+}
+
+
+static void send_callback(int epoll_fd, int fd, void *arg)
+{
+
+    char buf[BUFSIZ];
+
+    read(fd, buf, BUFSIZ);
+
+    printf("read: %s \n", buf);
+
+    //
+//    del_epoll_event();
+
+//    add_epoll_event();
+
+}
+
+static void recv_callback(int epoll_fd, int fd, void *arg)
+{
 
 
 }
