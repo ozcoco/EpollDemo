@@ -1,1 +1,1 @@
-/usr/lib64/ccache/c++  -g   CMakeFiles/epoll_demo.dir/main.cpp.o  -o epoll_demo 
+/usr/bin/c++     CMakeFiles/epoll_demo.dir/main.cpp.o  -o epoll_demo 

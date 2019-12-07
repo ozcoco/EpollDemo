@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/main.cpp" "/run/media/ozcomcn/^_^/Repo/c++/epoll_demo/cmake-build-debug/CMakeFiles/epoll_demo.dir/main.cpp.o"
+  "/mnt/f/Workspace/cppdemo/EpollDemo/main.cpp" "/mnt/f/Workspace/cppdemo/EpollDemo/cmake-build-debug/CMakeFiles/epoll_demo.dir/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -1,20 +1,17 @@
 #include <iostream>
 
-
 static void test();
 
 static void test2();
 
-
 int main()
 {
 
-//    test();
+    //    test();
     test2();
 
     return 0;
 }
-
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -29,8 +26,7 @@ int main()
 #include <functional>
 #include <fcntl.h>
 
-
-template<typename __Type>
+template <typename __Type>
 class ToUpper
 {
 public:
@@ -40,20 +36,20 @@ public:
     }
 };
 
-
 #define PROTOCOL 0
 #define PORT 9999
 #define DOMAIN AF_INET
 #define TYPE SOCK_STREAM
 #define S_IP "127.0.0.1"
 
-
 static void test()
 {
 
     int listen_fd, c_fd;
 
-    struct sockaddr_in sockAddr{}, acceptAddr{};
+    struct sockaddr_in sockAddr
+    {
+    }, acceptAddr{};
 
     socklen_t c_addr_len;
 
@@ -80,7 +76,7 @@ static void test()
 
     sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(listen_fd, (struct sockaddr *) &sockAddr, sizeof(sockAddr)) != 0)
+    if (bind(listen_fd, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) != 0)
     {
         perror("bind socket failure !");
 
@@ -94,7 +90,7 @@ static void test()
         exit(errno);
     }
 
-    c_fd = accept(listen_fd, (struct sockaddr *) &acceptAddr, &c_addr_len);
+    c_fd = accept(listen_fd, (struct sockaddr *)&acceptAddr, &c_addr_len);
 
     if (c_fd < 0)
     {
@@ -103,12 +99,12 @@ static void test()
         exit(errno);
     }
 
-
     while (true)
     {
         size_t len = read(c_fd, buf, sizeof(buf));
 
-        if (len == 0) continue;
+        if (len == 0)
+            continue;
 
         if (strstr(buf, "exit"))
         {
@@ -129,9 +125,7 @@ static void test()
     close(listen_fd);
 
     printf("exit!!!");
-
 }
-
 
 /**
  * set fd nonblock
@@ -139,19 +133,8 @@ static void test()
  * **/
 void set_nonblock(int fd)
 {
-    int flag = fcntl(fd, F_GETFD);
-
-    flag |= O_CLOEXEC;
-
-    fcntl(fd, F_SETFD, flag); //close to exec
-
-    flag = fcntl(fd, F_GETFL);
-
-    flag |= O_NONBLOCK;
-
-    fcntl(fd, F_SETFL, flag);
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 }
-
 
 /**
  * set sock resume
@@ -159,9 +142,11 @@ void set_nonblock(int fd)
  * **/
 void set_sock_reuse(int sock_fd)
 {
+
     int reuse = 1;
 
     if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &reuse, sizeof(reuse)) == -1)
+    // if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
     {
         perror("set reuseaddr | reuseport  socket failure !");
 
@@ -169,50 +154,47 @@ void set_sock_reuse(int sock_fd)
     }
 }
 
-
 /**
  * init epoll
  *
  * **/
-void init_epoll(int *epoll_fd)
+int create_epoll()
 {
-    *epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 
-    if (*epoll_fd == -1)
+    // int epoll_fd = epoll_create(1);
+
+    if (epoll_fd == -1)
     {
         perror("epoll_create1");
 
         exit(EXIT_FAILURE);
     }
-}
 
+    return epoll_fd;
+}
 
 #define MAX_EVENTS 10
 
 struct epoll_event events[MAX_EVENTS];
 
-void add_epoll_event(int epoll_fd, struct epoll_event &ev)
+void add_epoll_event(int epoll_fd, int fd, struct epoll_event ev)
 {
-
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, ev.data.fd, &ev) == -1)
+    if (-1 == epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev))
     {
-        perror("epoll_ctl: listen_sock");
-        exit(EXIT_FAILURE);
+        printf("epoll_ctl error, errno : %d \n", errno);
     }
-
 }
 
-
-static void do_use_fd(struct epoll_event &ev);
-
-union event_callback
+void del_epoll_event(int epoll_fd, int fd)
 {
-    void (*send)(int epoll_fd, int fd, void *arg);
+    if (-1 == epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr))
+    {
+        printf("epoll_ctl error, errno : %d \n", errno);
+    }
+}
 
-    void (*recv)(int epoll_fd, int fd, void *arg);
-
-    void (*err)(int epoll_fd, int fd, void *arg);
-};
+static void do_use_fd(const struct epoll_event &ev);
 
 struct event_handle
 {
@@ -224,85 +206,138 @@ struct event_handle
 
     void *arg;
 
-    union event_callback callback;
-};
+    inline void send_callback()
+    {
+        char buf[BUFSIZ];
 
+        bzero(buf, BUFSIZ);
+
+        int len = read(fd, buf, BUFSIZ);
+
+        write(STDOUT_FILENO, buf, len);
+    }
+
+    inline void recv_callback()
+    {
+        char buf[BUFSIZ];
+
+        bzero(buf, BUFSIZ);
+
+        for (;;)
+        {
+            int ret = recv(fd, buf, BUFSIZ, 0);
+
+            if (ret < 0)
+            {
+
+                if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN)
+                    continue;
+
+                printf("error\n");
+
+                del_epoll_event(epoll_fd, fd);
+
+                close(fd);
+
+                break;
+            }
+            else if (ret == 0)
+            {
+
+                printf("客户端主动关闭请求！！！\n");
+
+                del_epoll_event(epoll_fd, fd);
+
+                close(fd);
+
+                break;
+            }
+            else
+            {
+                write(STDOUT_FILENO, buf, ret);
+
+                if (ret < BUFSIZ)
+                {
+                    printf("read finished \n");
+
+                    break;
+                }
+            }
+        }
+    }
+
+    inline void error_callback()
+    {
+    }
+};
 
 static void send_callback(int epoll_fd, int fd, void *arg);
 
 static void recv_callback(int epoll_fd, int fd, void *arg);
 
-static struct event_handle evHandle{};
+static void error_callback(int epoll_fd, int fd, void *arg);
+
+#define MAX_LINE 10
+// #define MAX_EVENTS 10
+#define MAX_LISTENFD 5
+
+static int create_and_listen()
+{
+    int on = 1;
+
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in servaddr;
+
+    // fcntl(listenfd, F_SETFL, O_NONBLOCK);
+    set_nonblock(listenfd);
+
+    // setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+    set_sock_reuse(listenfd);
+
+    servaddr.sin_family = AF_INET;
+
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    servaddr.sin_port = htons(9999);
+
+    if (-1 == bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)))
+    {
+        printf("bind errno, errno : %d \n", errno);
+    }
+
+    if (-1 == listen(listenfd, MAX_LISTENFD))
+    {
+        printf("listen error, errno : %d \n", errno);
+    }
+    printf("listen in port 9999 !!!\n");
+
+    return listenfd;
+}
 
 static void test2()
 {
-    int epoll_fd;
+    const int &sock_fd = create_and_listen();
 
-    int sock_fd, c_fd;
+    struct sockaddr_in acceptAddr;
 
-    struct sockaddr_in sockAddr{}, acceptAddr{};
+    socklen_t addr_len = sizeof(struct sockaddr);
+    ;
 
-    socklen_t c_addr_len;
+    const int &epoll_fd = create_epoll();
 
-    char buf[BUFSIZ];
+    struct epoll_event ev;
 
-    memset(buf, 0, BUFSIZ);
+    ev.data.fd = sock_fd;
 
-    memset(&sockAddr, 0, sizeof(sockAddr));
+    ev.events = EPOLLIN | EPOLLET;
 
-    memset(&acceptAddr, 0, sizeof(acceptAddr));
-
-    sock_fd = socket(DOMAIN, TYPE, PROTOCOL);
-
-    if (sock_fd < 0)
-    {
-        perror("create socket failure !");
-
-        exit(errno);
-    }
-
-    set_nonblock(sock_fd);
-
-    set_sock_reuse(sock_fd);
-
-    init_epoll(&epoll_fd);
-
-    {//add sock event
-        struct epoll_event sock_ev{};
-
-        sock_ev.events = EPOLLIN | EPOLLET;
-
-        sock_ev.data.fd = sock_fd;
-
-        add_epoll_event(epoll_fd, sock_ev);
-    }
-
-    sockAddr.sin_family = AF_INET;
-
-    sockAddr.sin_port = htons(PORT);
-
-    sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(sock_fd, (struct sockaddr *) &sockAddr, sizeof(sockAddr)) != 0)
-    {
-        perror("bind socket failure !");
-
-        exit(errno);
-    }
-
-    if (listen(sock_fd, 10) != 0)
-    {
-        perror("listen socket failure !");
-
-        exit(errno);
-    }
-
-
-    int nfds;
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock_fd, &ev);
 
     for (;;)
     {
-        nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+        int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1); //时间参数为0表示立即返回，为-1表示无限等待
+
         if (nfds == -1)
         {
             perror("epoll_wait");
@@ -313,38 +348,40 @@ static void test2()
         {
             if (events[n].data.fd == sock_fd)
             {
-                int conn_sock = accept(sock_fd, (struct sockaddr *) &acceptAddr, &c_addr_len);
+
+                int conn_sock = accept4(sock_fd, (struct sockaddr *)&acceptAddr, &addr_len,
+                                        SOCK_CLOEXEC | SOCK_NONBLOCK);
+
+                // int conn_sock = accept(sock_fd, (struct sockaddr *)&acceptAddr, &addr_len);
 
                 if (conn_sock == -1)
                 {
-                    perror("accept");
+                    perror("--->accept");
+
+                    printf("sock_fd: %d \n errno: %d", sock_fd, errno);
+
                     exit(EXIT_FAILURE);
                 }
 
                 set_nonblock(conn_sock);
 
-                struct epoll_event ev{};
-
                 ev.events = EPOLLIN | EPOLLET;
 
                 ev.data.fd = conn_sock;
 
+                static struct event_handle evh;
 
-                evHandle.epoll_fd = epoll_fd;
+                evh.fd = conn_sock;
 
-                evHandle.fd = conn_sock;
+                evh.epoll_fd = epoll_fd;
 
-                evHandle.events = ev.events;
+                evh.events = EPOLLIN;
 
-                evHandle.callback.send = &send_callback;
+                ev.data.ptr = &evh;
 
-                evHandle.callback.recv = &recv_callback;
-
-                ev.data.ptr = &evHandle;
-
-                add_epoll_event(epoll_fd, ev);
-
-            } else
+                add_epoll_event(epoll_fd, conn_sock, ev);
+            }
+            else
             {
                 do_use_fd(events[n]);
             }
@@ -353,52 +390,30 @@ static void test2()
 
     close(sock_fd);
 
-    for (auto &ev:events)
+    for (auto &ev : events)
     {
         close(ev.data.fd);
     }
 }
 
-
-static void do_use_fd(struct epoll_event &ev)
+static void do_use_fd(const struct epoll_event &ev)
 {
-    struct event_handle *handle = reinterpret_cast<struct event_handle *>(ev.data.ptr);
+    struct event_handle *evh = static_cast<struct event_handle *>(ev.data.ptr);
 
-    union event_callback &callback = handle->callback;
-
-    if (ev.events == EPOLLIN)
+    if (ev.events & EPOLLIN)
     {
-        callback.recv(handle->epoll_fd, handle->fd, handle->arg);
-
-    } else if (ev.events == EPOLLOUT)
+        evh->recv_callback();
+    }
+    else if (ev.events & EPOLLOUT)
     {
-        callback.send(handle->epoll_fd, handle->fd, handle->arg);
-
-    } else
+        evh->send_callback();
+    }
+    else if (ev.events & EPOLLERR)
+    {
+        evh->error_callback();
+    }
+    else
     {
         //todo
     }
-}
-
-
-static void send_callback(int epoll_fd, int fd, void *arg)
-{
-
-    char buf[BUFSIZ];
-
-    read(fd, buf, BUFSIZ);
-
-    printf("read: %s \n", buf);
-
-    //
-//    del_epoll_event();
-
-//    add_epoll_event();
-
-}
-
-static void recv_callback(int epoll_fd, int fd, void *arg)
-{
-
-
 }
